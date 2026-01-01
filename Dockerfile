@@ -7,63 +7,38 @@ ENV TZ=Asia/Jakarta
 
 RUN set -eux; \
     apt-get update; \
-    apt-get upgrade -y;\
+    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
         software-properties-common \
         gpg-agent \
         lsb-release \
-    ; \
-    add-apt-repository -y  ppa:jcfp/ppa; \
-    add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        build-essential \
+        ca-certificates \
         wget \
         curl \
         git \
-        ca-certificates \
-        netbase \
-        unzip \
-        jq \
-        bc \
-        xxd \
-        locales \
-        tzdata \
     ; \
-    apt-get install -y --no-install-recommends \
-        libssl-dev \
-        zlib1g-dev \
-        libncurses5-dev \
-        libnss3-dev \
-        libreadline-dev \
-        libffi-dev \
-        libsqlite3-dev \
-        libbz2-dev \
-        libcurl4-openssl-dev \
-        libxml2-dev \
-        libxslt1-dev \
-        libjpeg-dev \
-        liblzma-dev \
-        libbluetooth-dev \
-        libmagic1t64 \
-        libzstd-dev \
-    ; \
-    apt-get install -y --no-install-recommends \
-        tk-dev \
-        uuid-dev \
-    || echo "Skipping problematic dev packages on this arch"; \
-    apt-get install -y --no-install-recommends \
-        ffmpeg \
-        aria2 \
-        p7zip-full \
-        nodejs \
-        openjdk-21-jre-headless \
-        sabnzbdplus \
-        qbittorrent-nox \
-        par2 \
-        unrar \
-        openssl \
-    ; \
+    # Attempt to add PPAs, but don't fail if they are invalid for this arch/version
+    add-apt-repository -y ppa:jcfp/ppa || true; \
+    add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable || true; \
+    apt-get update; \
+    \
+    # List of desired packages
+    pkgs="build-essential libssl-dev zlib1g-dev libncurses5-dev libnss3-dev \
+          libreadline-dev libffi-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev \
+          libxml2-dev libxslt1-dev libjpeg-dev liblzma-dev libbluetooth-dev \
+          libmagic1t64 tk-dev uuid-dev libzstd-dev ffmpeg aria2 p7zip-full \
+          jq openssl bc xxd nodejs openjdk-21-jre-headless sabnzbdplus \
+          qbittorrent-nox par2 unrar locales tzdata netbase unzip"; \
+    \
+    for pkg in $pkgs; do \
+        if apt-cache show "$pkg" >/dev/null 2>&1; then \
+            echo "Installing $pkg..."; \
+            apt-get install -y --no-install-recommends "$pkg" || echo "Failed to install $pkg, skipping..."; \
+        else \
+            echo "Package $pkg not found for this architecture, skipping..."; \
+        fi; \
+    done; \
+    \
     rm -rf /var/lib/apt/lists/*; \
     \
     locale-gen en_US.UTF-8; \
@@ -75,12 +50,9 @@ ENV LC_ALL=en_US.UTF-8
 ENV PYTHON_VERSION 3.14.2
 
 RUN set -eux; \
-        \
         savedAptMark="$(apt-mark showmanual)"; \
         apt-get update; \
-        apt-get install -y --no-install-recommends \
-                libzstd-dev \
-        ; \
+        apt-get install -y --no-install-recommends libzstd-dev || true; \
         \
         wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz"; \
         mkdir -p /usr/src/python; \
@@ -143,14 +115,10 @@ RUN set -eux; \
         \
         apt-mark auto '.*' > /dev/null; \
         apt-mark manual $savedAptMark; \
-        find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
-                | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \ 
-                | sort -u \ 
-                | xargs -rt dpkg-query --search \ 
-                | awk 'sub(":$", "", $1) { print $1 }' \ 
-                | sort -u \ 
-                | xargs -r apt-mark manual \ 
-        ; \
+        # Restore manual flags for packages we kept
+        for pkg in $pkgs; do \
+            apt-mark manual "$pkg" 2>/dev/null || true; \
+        done; \
         apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
         apt-get dist-clean; \
         \
@@ -197,8 +165,9 @@ RUN set -eux; \
         chmod 755 /usr/bin/rclone; \
         rm -rf rclone-*-linux-${RCLONE_ARCH} "rclone-current-linux-${RCLONE_ARCH}.zip"; \
     else \
+        # Attempt to install via apt if zip not found, but don't fail if missing
         apt-get update; \
-        apt-get install -y rclone; \
+        apt-get install -y rclone || echo "Rclone not available for this arch, skipping"; \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
