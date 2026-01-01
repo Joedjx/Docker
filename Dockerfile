@@ -116,6 +116,12 @@ RUN set -eux; \
         apt-mark auto '.*' > /dev/null; \
         apt-mark manual $savedAptMark; \
         # Restore manual flags for packages we kept
+        pkgs="build-essential libssl-dev zlib1g-dev libncurses5-dev libnss3-dev \
+          libreadline-dev libffi-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev \
+          libxml2-dev libxslt1-dev libjpeg-dev liblzma-dev libbluetooth-dev \
+          libmagic1t64 tk-dev uuid-dev libzstd-dev ffmpeg aria2 p7zip-full \
+          jq openssl bc xxd nodejs openjdk-21-jre-headless sabnzbdplus \
+          qbittorrent-nox par2 unrar locales tzdata netbase unzip"; \
         for pkg in $pkgs; do \
             apt-mark manual "$pkg" 2>/dev/null || true; \
         done; \
