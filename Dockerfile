@@ -18,6 +18,19 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         build-essential \
+        wget \
+        curl \
+        git \
+        ca-certificates \
+        netbase \
+        unzip \
+        jq \
+        bc \
+        xxd \
+        locales \
+        tzdata \
+    ; \
+    apt-get install -y --no-install-recommends \
         libssl-dev \
         zlib1g-dev \
         libncurses5-dev \
@@ -33,30 +46,23 @@ RUN set -eux; \
         liblzma-dev \
         libbluetooth-dev \
         libmagic1t64 \
+        libzstd-dev \
+    ; \
+    apt-get install -y --no-install-recommends \
         tk-dev \
         uuid-dev \
-        libzstd-dev \
-        wget \
-        curl \
-        git \
+    || echo "Skipping problematic dev packages on this arch"; \
+    apt-get install -y --no-install-recommends \
         ffmpeg \
         aria2 \
         p7zip-full \
-        jq \
-        openssl \
-        bc \
-        xxd \
         nodejs \
         openjdk-21-jre-headless \
         sabnzbdplus \
         qbittorrent-nox \
         par2 \
         unrar \
-        locales \
-        tzdata \
-        ca-certificates \
-        netbase \
-        unzip \
+        openssl \
     ; \
     rm -rf /var/lib/apt/lists/*; \
     \
