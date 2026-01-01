@@ -3,7 +3,13 @@ name: Build and Push Docker Image
 on:
   schedule:
     - cron: '0 0 * * 5' # Every Friday at 00:00
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      no_cache:
+        description: 'Build without cache'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -47,9 +53,10 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           # Push by digest first to ensure we get a unique reference
-          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/test,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/my-tool,push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ steps.slug.outputs.slug }}
           cache-to: type=gha,mode=max,scope=${{ steps.slug.outputs.slug }}
+          no-cache: ${{ inputs.no_cache }}
 
       - name: Export digest
         run: |
@@ -88,9 +95,9 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/test:latest \
-            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/test@sha256:%s ' *)
+          docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/my-tool:latest \
+            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/my-tool@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKERHUB_USERNAME }}/test:latest
+          docker buildx imagetools inspect ${{ secrets.DOCKERHUB_USERNAME }}/my-tool:latest
