@@ -32,7 +32,7 @@ RUN set -eux; \
         libjpeg-dev \
         liblzma-dev \
         libbluetooth-dev \
-        libmagic1 \
+        libmagic1t64 \
         tk-dev \
         uuid-dev \
         libzstd-dev \
@@ -186,12 +186,10 @@ RUN set -eux; \
     if [ "$RCLONE_ARCH" != "unknown" ]; then \
         curl -O "https://downloads.rclone.org/rclone-current-linux-${RCLONE_ARCH}.zip"; \
         unzip "rclone-current-linux-${RCLONE_ARCH}.zip"; \
-        cd "rclone-*-linux-${RCLONE_ARCH}"; \
-        cp rclone /usr/bin/; \
+        cp rclone-*-linux-${RCLONE_ARCH}/rclone /usr/bin/; \
         chown root:root /usr/bin/rclone; \
         chmod 755 /usr/bin/rclone; \
-        cd ..; \
-        rm -rf "rclone-*-linux-${RCLONE_ARCH}" "rclone-current-linux-${RCLONE_ARCH}.zip"; \
+        rm -rf rclone-*-linux-${RCLONE_ARCH} "rclone-current-linux-${RCLONE_ARCH}.zip"; \
     else \
         apt-get update; \
         apt-get install -y rclone; \
