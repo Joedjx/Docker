@@ -93,9 +93,9 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/my-tool:latest \
-            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/my-tool@sha256:%s ' *)
+          docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/mltb:latest \
+            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/mltb@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKERHUB_USERNAME }}/my-tool:latest
+          docker buildx imagetools inspect ${{ secrets.DOCKERHUB_USERNAME }}/mltb:latest
