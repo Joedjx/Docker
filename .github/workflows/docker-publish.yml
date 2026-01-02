@@ -51,7 +51,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           # Push by digest first to ensure we get a unique reference
-          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/my-tool,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/mltb,push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ steps.slug.outputs.slug }}
           cache-to: type=gha,mode=max,scope=${{ steps.slug.outputs.slug }}
           no-cache: ${{ inputs.no_cache }}
