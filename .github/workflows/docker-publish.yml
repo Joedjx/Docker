@@ -48,6 +48,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v5
         with:
+          no-cache: ${{ github.event_name == 'schedule' && 'true' || 'false' }}
           context: .
           platforms: ${{ matrix.platform }}
           # Push by digest first to ensure we get a unique reference
