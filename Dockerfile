@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM ubuntu:25.10 AS builder
+FROM ubuntu:26.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Jakarta
@@ -19,7 +19,7 @@ RUN set -eux; \
     ; \
     # Attempt to add PPAs, but don't fail if they are invalid for this arch/version
     add-apt-repository -y ppa:jcfp/ppa || true; \
-    add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable || true; \
+    # add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable || true; \
     apt-get update; \
     \
     # List of desired packages
