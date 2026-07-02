@@ -125,6 +125,7 @@ RUN set -eux; \
         for pkg in $pkgs; do \
             apt-mark manual "$pkg" 2>/dev/null || true; \
         done; \
+        curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh; \
         apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
         apt-get dist-clean; \
         \
