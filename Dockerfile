@@ -176,7 +176,19 @@ RUN set -eux; \
         apt-get update; \
         apt-get install -y rclone || echo "Rclone not available for this arch, skipping"; \
         rm -rf /var/lib/apt/lists/*; \
-    fi
+    fi \
+    \
+    # Install Ookla Speedtest
+    if [ -n "$SPEEDTEST_ARCH" ]; then \
+        wget -qO /tmp/speedtest.tgz \
+            "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${SPEEDTEST_ARCH}.tgz"; \
+        tar -xzf /tmp/speedtest.tgz -C /usr/local/bin speedtest; \
+        chmod +x /usr/local/bin/speedtest; \
+        rm -f /tmp/speedtest.tgz; \
+        speedtest --version; \
+    else \
+        echo "Skipping Ookla Speedtest (unsupported architecture: $TARGETARCH)"; \
+    fi    
 
 WORKDIR /JDownloader
 RUN wget -O JDownloader.jar http://installer.jdownloader.org/JDownloader.jar \
