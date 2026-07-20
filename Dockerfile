@@ -19,7 +19,6 @@ RUN set -eux; \
     ; \
     # Attempt to add PPAs, but don't fail if they are invalid for this arch/version
     add-apt-repository -y ppa:jcfp/ppa || true; \
-    # add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable || true; \
     apt-get update; \
     \
     # List of desired packages
@@ -47,7 +46,7 @@ RUN set -eux; \
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
-ENV PYTHON_VERSION 3.14.6
+ENV PYTHON_VERSION=3.14.6
 
 RUN set -eux; \
         savedAptMark="$(apt-mark showmanual)"; \
@@ -127,7 +126,8 @@ RUN set -eux; \
         done; \
         curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh; \
         apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-        apt-get dist-clean; \
+        apt-get clean; \
+        rm -rf /var/lib/apt/lists/*; \
         \
         export PYTHONDONTWRITEBYTECODE=1; \
         python3 --version; \
@@ -148,19 +148,27 @@ RUN set -eux; \
     case "$TARGETARCH" in \
         amd64) \
             RCLONE_ARCH="amd64"; \
+            SPEEDTEST_ARCH="x86_64"; \
             ;; \
         arm64) \
             RCLONE_ARCH="arm64"; \
+            SPEEDTEST_ARCH="aarch64"; \
             ;; \
         arm) \
+            SPEEDTEST_ARCH="armhf"; \
             if [ "$TARGETVARIANT" = "v7" ]; then \
                 RCLONE_ARCH="arm-v7"; \
             else \
                 RCLONE_ARCH="arm"; \
             fi \
             ;; \
+        i386) \
+            RCLONE_ARCH="386"; \
+            SPEEDTEST_ARCH="i386"; \
+            ;; \
         *) \
             RCLONE_ARCH="unknown"; \
+            SPEEDTEST_ARCH=""; \
             ;; \
     esac; \
     \
@@ -172,13 +180,12 @@ RUN set -eux; \
         chmod 755 /usr/bin/rclone; \
         rm -rf rclone-*-linux-${RCLONE_ARCH} "rclone-current-linux-${RCLONE_ARCH}.zip"; \
     else \
-        # Attempt to install via apt if zip not found, but don't fail if missing
         apt-get update; \
-        apt-get install -y rclone || echo "Rclone not available for this arch, skipping"; \
+        apt-get install -y --no-install-recommends rclone || echo "Rclone not available for this arch, skipping"; \
         rm -rf /var/lib/apt/lists/*; \
-    fi \
+    fi; \
     \
-    # Install Ookla Speedtest
+    # Install Ookla Speedtest using mapped variable
     if [ -n "$SPEEDTEST_ARCH" ]; then \
         wget -qO /tmp/speedtest.tgz \
             "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${SPEEDTEST_ARCH}.tgz"; \
@@ -188,15 +195,13 @@ RUN set -eux; \
         speedtest --version; \
     else \
         echo "Skipping Ookla Speedtest (unsupported architecture: $TARGETARCH)"; \
-    fi    
+    fi
 
 WORKDIR /JDownloader
 RUN wget -O JDownloader.jar http://installer.jdownloader.org/JDownloader.jar \
-    && chmod 777 -R /JDownloader
-
+    && chmod 755 /JDownloader
 
 FROM scratch
-
 COPY --from=builder / /
 
 CMD ["bash"]
